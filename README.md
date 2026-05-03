@@ -2,11 +2,8 @@ import pygame
 import random
 import sys
 import os
-import asyncio  # required for pygbag
+import asyncio
 
-# -------------------------
-# INIT
-# -------------------------
 pygame.init()
 
 WIDTH, HEIGHT = 800, 600
@@ -16,20 +13,13 @@ pygame.display.set_caption("Bone Collector")
 clock = pygame.time.Clock()
 FONT = pygame.font.SysFont("Arial", 24)
 
-# -------------------------
-# FILE PATH
-# -------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# -------------------------
-# SAFE IMAGE LOADER
-# -------------------------
 def load_image(name, size):
     try:
         img = pygame.image.load(os.path.join(BASE_DIR, name)).convert_alpha()
         return pygame.transform.scale(img, size)
     except:
-        # fallback if image missing
         surface = pygame.Surface(size)
         surface.fill((255, 0, 0))
         return surface
@@ -38,9 +28,7 @@ player_img = load_image("player.png", (120, 120))
 poop_img = load_image("poop.png", (60, 60))
 bone_img = load_image("bone.png", (25, 25))
 
-# -------------------------
-# PLAYER
-# -------------------------
+
 class Player:
     def __init__(self):
         self.rect = pygame.Rect(400, 300, 120, 120)
@@ -61,9 +49,7 @@ class Player:
     def draw(self):
         screen.blit(player_img, self.rect)
 
-# -------------------------
-# BONE
-# -------------------------
+
 class Bone:
     def __init__(self):
         self.rect = pygame.Rect(
@@ -76,9 +62,7 @@ class Bone:
     def draw(self):
         screen.blit(bone_img, self.rect)
 
-# -------------------------
-# POOP (ENEMY)
-# -------------------------
+
 class Poop:
     def __init__(self):
         self.pos = pygame.Vector2(
@@ -100,9 +84,7 @@ class Poop:
     def get_rect(self):
         return poop_img.get_rect(center=self.pos)
 
-# -------------------------
-# GAME STATE RESET
-# -------------------------
+
 def reset_game():
     return (
         Player(),
@@ -112,11 +94,10 @@ def reset_game():
         False
     )
 
+
 player, bones, poops, score, game_over = reset_game()
 
-# -------------------------
-# MAIN LOOP (ASYNC FOR WEB)
-# -------------------------
+
 async def main():
     global player, bones, poops, score, game_over
 
@@ -124,7 +105,7 @@ async def main():
         clock.tick(60)
         screen.fill((30, 30, 50))
 
-        pygame.event.pump()  # important for browser
+        pygame.event.pump()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -135,20 +116,17 @@ async def main():
             keys = pygame.key.get_pressed()
             player.move(keys)
 
-            # move enemies
             for poop in poops:
                 poop.move_toward_player(player)
                 if player.rect.colliderect(poop.get_rect()):
                     game_over = True
 
-            # collect bones
             for bone in bones[:]:
                 if player.rect.colliderect(bone.rect):
                     bones.remove(bone)
                     bones.append(Bone())
                     score += 1
 
-            # draw everything
             player.draw()
 
             for bone in bones:
@@ -157,7 +135,6 @@ async def main():
             for poop in poops:
                 poop.draw()
 
-            # score
             text = FONT.render(f"Score: {score}", True, (255, 255, 255))
             screen.blit(text, (10, 10))
 
@@ -170,11 +147,8 @@ async def main():
                 player, bones, poops, score, game_over = reset_game()
 
         pygame.display.flip()
+        await asyncio.sleep(0)
 
-        await asyncio.sleep(0)  # REQUIRED for web
 
-# -------------------------
-# RUN
-# -------------------------
 if __name__ == "__main__":
     asyncio.run(main())
