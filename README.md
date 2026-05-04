@@ -1,11 +1,11 @@
 import pygame
 import random
-import sys
-import os
 import asyncio
+import os
 
 pygame.init()
 
+# Screen setup
 WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Bone Collector")
@@ -13,6 +13,7 @@ pygame.display.set_caption("Bone Collector")
 clock = pygame.time.Clock()
 FONT = pygame.font.SysFont("Arial", 24)
 
+# Fix file path
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def load_image(name, size):
@@ -24,11 +25,12 @@ def load_image(name, size):
         surface.fill((255, 0, 0))
         return surface
 
+# Load images (make sure these files exist or it will show red boxes)
 player_img = load_image("player.png", (120, 120))
 poop_img = load_image("poop.png", (60, 60))
 bone_img = load_image("bone.png", (25, 25))
 
-
+# ---------------- PLAYER ----------------
 class Player:
     def __init__(self):
         self.rect = pygame.Rect(400, 300, 120, 120)
@@ -49,7 +51,7 @@ class Player:
     def draw(self):
         screen.blit(player_img, self.rect)
 
-
+# ---------------- BONE ----------------
 class Bone:
     def __init__(self):
         self.rect = pygame.Rect(
@@ -62,7 +64,7 @@ class Bone:
     def draw(self):
         screen.blit(bone_img, self.rect)
 
-
+# ---------------- POOP ----------------
 class Poop:
     def __init__(self):
         self.pos = pygame.Vector2(
@@ -84,7 +86,7 @@ class Poop:
     def get_rect(self):
         return poop_img.get_rect(center=self.pos)
 
-
+# ---------------- RESET ----------------
 def reset_game():
     return (
         Player(),
@@ -94,10 +96,9 @@ def reset_game():
         False
     )
 
-
 player, bones, poops, score, game_over = reset_game()
 
-
+# ---------------- MAIN LOOP ----------------
 async def main():
     global player, bones, poops, score, game_over
 
@@ -116,17 +117,20 @@ async def main():
             keys = pygame.key.get_pressed()
             player.move(keys)
 
+            # Move enemies
             for poop in poops:
                 poop.move_toward_player(player)
                 if player.rect.colliderect(poop.get_rect()):
                     game_over = True
 
+            # Collect bones
             for bone in bones[:]:
                 if player.rect.colliderect(bone.rect):
                     bones.remove(bone)
                     bones.append(Bone())
                     score += 1
 
+            # Draw everything
             player.draw()
 
             for bone in bones:
@@ -149,6 +153,6 @@ async def main():
         pygame.display.flip()
         await asyncio.sleep(0)
 
-
+# ---------------- RUN ----------------
 if __name__ == "__main__":
     asyncio.run(main())
